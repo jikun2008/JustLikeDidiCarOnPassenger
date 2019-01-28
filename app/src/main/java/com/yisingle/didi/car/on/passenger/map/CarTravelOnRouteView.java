@@ -173,7 +173,7 @@ public class CarTravelOnRouteView {
         onCarTravelCallBack = null;
         stopMove();
         if (null != carMarker) {
-            carMarker.destroy();
+            carMarker.remove();
         }
 
 

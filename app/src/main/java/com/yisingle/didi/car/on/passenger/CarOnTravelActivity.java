@@ -6,8 +6,11 @@ import android.view.View;
 
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.TextureMapView;
+import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
+import com.amap.api.maps.model.Marker;
+import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.services.core.LatLonPoint;
 import com.yisingle.didi.car.on.passenger.base.BaseMapActivity;
 import com.yisingle.didi.car.on.passenger.map.CarTravelOnRouteView;
@@ -26,6 +29,10 @@ public class CarOnTravelActivity extends BaseMapActivity {
 
     private CarTravelOnRouteView driveRouteView;
 
+    private Marker startMarker;
+
+    private Marker endMarker;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +43,8 @@ public class CarOnTravelActivity extends BaseMapActivity {
         mapView = findViewById(R.id.textureMapView);
 
         initMapView(savedInstanceState, mapView);
+
+        initMarker();
 
         driveRouteView = new CarTravelOnRouteView(getApplicationContext(), getAmap());
 
@@ -53,22 +62,32 @@ public class CarOnTravelActivity extends BaseMapActivity {
 
     }
 
+    private void initMarker() {
+        MarkerOptions startOptions = new MarkerOptions()
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.amap_start));
 
-    public void testRoute(View view) {
-
-
+        MarkerOptions endOptions = new MarkerOptions()
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.amap_end));
+        startMarker = getAmap().addMarker(startOptions);
+        endMarker = getAmap().addMarker(endOptions);
     }
 
 
-    public void move(View view) {
+    public void moveByList(View view) {
+
+        //一次传递一个坐标点数组移动
+        List<LatLng> moveList = TestDataUtils.readLatLngsresume();
+
+        LatLng start = moveList.get(0);
+        LatLng end = moveList.get(moveList.size() - 1);
+
+        startMarker.setPosition(start);
+        endMarker.setPosition(end);
 
 
-        LatLonPoint end = new LatLonPoint(30.615152, 104.06728);
+        driveRouteView.moveToPoint(moveList, end, 80000, false);
 
-        List<LatLng> latLngList = TestDataUtils.readLatLngsresume();
-        driveRouteView.moveToPoint(latLngList, latLngList.get(latLngList.size() - 1), 6000, false);
-
-        zoomToSpan(latLngList.get(0), latLngList.get(latLngList.size() - 1));
+        zoomToSpan(start, end);
 
     }
 
@@ -77,6 +96,8 @@ public class CarOnTravelActivity extends BaseMapActivity {
     public void onDestroy() {
         super.onDestroy();
         driveRouteView.destoryView();
+        startMarker.destroy();
+        endMarker.destroy();
     }
 
 
@@ -89,7 +110,7 @@ public class CarOnTravelActivity extends BaseMapActivity {
             b.include(new LatLng(end.getLatitude(), end.getLongitude()));
             LatLngBounds bounds = b.build();
             getAmap().animateCamera(CameraUpdateFactory
-                    .newLatLngBounds(bounds, 50));
+                    .newLatLngBounds(bounds, 100));
         } catch (Throwable e) {
             e.printStackTrace();
         }
